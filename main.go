@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"os"
-	"strings"
 )
 
 var (
@@ -44,8 +47,13 @@ func init() {
 }
 
 func main() {
-	fmt.Println("Os.Args:", strings.Join(os.Args, ", "))
+	fmt.Println("Os.Args:", os.Args)
 	flag.Parse()
+
+	if url == "" {
+		url = fmt.Sprint("https://cloudformation.", region, ".amazonaws.com")
+	}
+
 	fmt.Println("Variables")
 	fmt.Println("       stack: ", stack)
 	fmt.Println("    resource: ", resource)
@@ -56,4 +64,38 @@ func main() {
 	fmt.Println("  http_proxy: ", http_proxy)
 	fmt.Println(" https_proxy: ", https_proxy)
 	fmt.Println("     verbose: ", verbose)
+
+	config := aws.NewConfig()
+	config.Region = aws.String(region)
+	//config.Endpoint = aws.String(url)
+
+	svc := cloudformation.New(session.New(), config)
+
+	params := &cloudformation.DescribeStackResourceInput{LogicalResourceId: aws.String(resource), StackName: aws.String(stack)}
+
+	res, err := svc.DescribeStackResource(params)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	var mush interface{}
+	err = json.Unmarshal([]byte(*res.StackResourceDetail.Metadata), &mush)
+	metadata := mush.(map[string]interface{})
+
+	if _, ok := metadata["AWS::CloudFormation::Init"]; ok {
+		fmt.Println(metadata)
+	}
+
+	// for k, v := range metadata {
+	// 	switch vv := v.(type) {
+	// 	case string:
+	// 		fmt.Println(k, "is string", vv)
+	// 	default:
+	// 		fmt.Println(k, "is of a type I don't know how to handle")
+	// 	}
+	// }
+
+	//fmt.Printf("%v", metadata)
 }
