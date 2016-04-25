@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
+	"strings"
 )
 
 var (
@@ -19,6 +21,10 @@ var (
 )
 
 func init() {
+	if path.Base(os.Args[0]) != "cfn-init-tools" {
+		os.Args = append(strings.Split(os.Args[0], "-"), os.Args[1:]...)
+	}
+
 	flag.StringVar(&stack, "stack", "", "Name of the Stack.")
 	flag.StringVar(&stack, "s", "", "Name of the Stack.")
 
@@ -43,9 +49,9 @@ func init() {
 }
 
 func main() {
-	fmt.Println(os.Args[0])
+	fmt.Println("Os.Args:", strings.Join(os.Args, ", "))
 	flag.Parse()
-	fmt.Println("Arguments")
+	fmt.Println("Variables")
 	fmt.Println("       stack: ", stack)
 	fmt.Println("    resource: ", resource)
 	fmt.Println("      region: ", region)
