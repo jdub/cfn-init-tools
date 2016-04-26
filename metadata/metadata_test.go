@@ -16,7 +16,15 @@ func TestParseJson(t *testing.T) {
 	}
 }
 
-func TestEmpty(t *testing.T) {
+func TestTheNothing(t *testing.T) {
+	json := ``
+	// No, Mr. Bond, I expect you to die!
+	if _, err := Parse(json); err != nil {
+		return
+	}
+}
+
+func TestEmptyObject(t *testing.T) {
 	json := `{}`
 	// No, Mr. Bond, I expect you to die!
 	if _, err := Parse(json); err != nil {
