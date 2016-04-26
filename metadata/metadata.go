@@ -8,13 +8,20 @@ import (
 
 func Parse(metadata string) (m Metadata, err error) {
 	if err = json.Unmarshal([]byte(metadata), &m); err != nil {
-		return
+		return Metadata{Init: nil}, err
 	}
 
-	// FIXME: support configsets
-	// var configs map[string]*Config ?
 	if m.Init.ConfigSets != nil {
-		return m, fmt.Errorf("configSets not supported yet")
+		var c ConfigSets
+		if err = json.Unmarshal([]byte(metadata), &c); err != nil {
+			return Metadata{Init: nil}, err
+		}
+		// Bring the map of configs back to the metadata return value
+		m.Init.Configs = c.Configs
+		// We don't want the master config when we have a map of configs
+		m.Init.Config = nil
+		// The map of configs should not include a configSets member
+		delete(m.Init.Configs, "configSets")
 	}
 
 	return
@@ -27,6 +34,12 @@ type Metadata struct {
 type Init struct {
 	ConfigSets map[string][]interface{} `json:"configSets"`
 	Config     *Config                  `json:"config"`
+	Configs    map[string]*Config
+}
+
+// To fetch the map of configs when configSets != nil
+type ConfigSets struct {
+	Configs map[string]*Config `json:"AWS::CloudFormation::Init"`
 }
 
 // Arranged in order of execution

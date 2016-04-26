@@ -74,3 +74,44 @@ func TestUnmarshalTruthyJSON(t *testing.T) {
 	}
 	return
 }
+
+func TestConfigSets(t *testing.T) {
+	json := `
+{
+    "AWS::CloudFormation::Init": {
+        "configSets": {
+            "ascending": [ "1", "2" ],
+            "descending": [ "2", "1" ],
+            "test": [ "test" ],
+            "default": [ { "ConfigSet": "ascending" } ]
+        },
+        "config": {},
+        "1": {},
+        "2": {},
+        "test": {
+            "services": {
+                "sysvinit": {
+                    "nginx": {}
+                }
+            }
+        }
+    }
+}
+`
+	if m, err := Parse(json); err != nil {
+		t.Error(err)
+	} else {
+		if m.Init.Config != nil {
+			t.Errorf("Init.Config should be nil when processing configSets")
+		}
+		if _, ok := m.Init.Configs["configSets"]; ok {
+			t.Errorf(`Init.Configs["configSets"] should be nil when processing configSets`)
+		}
+		if _, ok := m.Init.Configs["test"].Services.SysVInit["nginx"]; !ok {
+			t.Errorf(`Init.Configs["test"].Services.SysVInit["nginx"] not unmarshalled correctly`)
+		}
+		// FIXME: test configSets themselves
+	}
+
+	return
+}
