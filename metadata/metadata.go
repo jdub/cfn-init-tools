@@ -2,7 +2,8 @@ package metadata
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
+	"strings"
 )
 
 func Parse(metadata string) (m Metadata, err error) {
@@ -13,7 +14,7 @@ func Parse(metadata string) (m Metadata, err error) {
 	// FIXME: support configsets
 	// var configs map[string]*Config ?
 	if m.Init.ConfigSets != nil {
-		return m, errors.New("configSets not supported yet")
+		return m, fmt.Errorf("configSets not supported yet")
 	}
 
 	return
@@ -30,13 +31,13 @@ type Init struct {
 
 // Arranged in order of execution
 type Config struct {
-	Packages map[string]*Package        `json:"packages"`
-	Groups   map[string]*Group          `json:"groups"`
-	Users    map[string]*User           `json:"users"`
-	Sources  map[string]string          `json:"sources"`
-	Files    map[string]*File           `json:"files"`
-	Commands map[string]*Command        `json:"commands"`
-	Services map[string]*ServiceManager `json:"services"`
+	Packages map[string]*Package `json:"packages"`
+	Groups   map[string]*Group   `json:"groups"`
+	Users    map[string]*User    `json:"users"`
+	Sources  map[string]string   `json:"sources"`
+	Files    map[string]*File    `json:"files"`
+	Commands map[string]*Command `json:"commands"`
+	Services *ServiceManager     `json:"services"`
 }
 
 type Package struct {
@@ -74,8 +75,8 @@ type Command struct {
 	Env                 map[string]string `json:"env"`
 	Cwd                 string            `json:"cwd"`
 	Test                string            `json:"test"`
-	IgnoreErrors        bool              `json:"ignoreErrors"`
-	WaitAfterCompletion bool              `json:"waitAfterCompletion"`
+	IgnoreErrors        JavaScriptBoolean `json:"ignoreErrors"`
+	WaitAfterCompletion JavaScriptBoolean `json:"waitAfterCompletion"`
 }
 
 type ServiceManager struct {
@@ -84,10 +85,24 @@ type ServiceManager struct {
 }
 
 type Service struct {
-	EnsureRunning bool                `json:"ensureRunning"`
-	Enabled       bool                `json:"enabled"`
+	EnsureRunning JavaScriptBoolean   `json:"ensureRunning"`
+	Enabled       JavaScriptBoolean   `json:"enabled"`
 	Files         []string            `json:"files"`
 	Sources       []string            `json:"sources"`
 	Packages      map[string][]string `json:"packages"`
 	Commands      []string            `json:"commands"`
+}
+
+type JavaScriptBoolean bool
+
+func (bit *JavaScriptBoolean) UnmarshalJSON(data []byte) error {
+	s := strings.ToLower(strings.Trim(string(data), `"`))
+	if s == "1" || s == "true" {
+		*bit = true
+	} else if s == "0" || s == "false" {
+		*bit = false
+	} else {
+		return fmt.Errorf("Boolean unmarshal error: invalid input %s", s)
+	}
+	return nil
 }
