@@ -4,6 +4,14 @@ import (
 	"testing"
 )
 
+func TestEmpty(t *testing.T) {
+	json := `{}`
+	// No, Mr. Bond, I expect you to die!
+	if _, err := Parse(json); err != nil {
+		return
+	}
+}
+
 func TestInit(t *testing.T) {
 	json := `
 {

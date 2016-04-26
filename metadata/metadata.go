@@ -7,14 +7,20 @@ import (
 )
 
 func Parse(metadata string) (m Metadata, err error) {
-	if err = json.Unmarshal([]byte(metadata), &m); err != nil {
-		return Metadata{Init: nil}, err
+	bytes := []byte(metadata)
+	if err = json.Unmarshal(bytes, &m); err != nil {
+		return
+	}
+
+	if m == (Metadata{}) {
+		err = fmt.Errorf("Could not find 'AWS::CloudFormation::Init' key in metadata")
+		return
 	}
 
 	if m.Init.ConfigSets != nil {
 		var c ConfigSets
-		if err = json.Unmarshal([]byte(metadata), &c); err != nil {
-			return Metadata{Init: nil}, err
+		if err = json.Unmarshal(bytes, &c); err != nil {
+			return
 		}
 		// Bring the map of configs back to the metadata return value
 		m.Init.Configs = c.Configs
