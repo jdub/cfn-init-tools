@@ -44,7 +44,19 @@ func ParseJson(metadata string) (j string, err error) {
 }
 
 type Metadata struct {
-	Init *Init `json:"AWS::CloudFormation::Init"`
+	Authentication map[string]*Authentication `json:"AWS::CloudFormation::Authentication"`
+	Init           *Init                      `json:"AWS::CloudFormation::Init"`
+}
+
+type Authentication struct {
+	AccessKeyId string   `json:"accessKeyId"`
+	Buckets     []string `json:"buckets"`
+	Password    string   `json:"password"`
+	SecretKey   string   `json:"secretKey"`
+	Type        string   `json:"type"`
+	Uris        []string `json:"uris"`
+	Username    string   `json:"username"`
+	RoleName    string   `json:"roleName"`
 }
 
 // Skips Configs which will be picked up on the second run
