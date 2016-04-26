@@ -45,7 +45,7 @@ func TestConfig(t *testing.T) {
 `
 	if m, err := Parse(json); err != nil {
 		t.Error(err)
-	} else if m.Init.Config == nil {
+	} else if m.Init.Configs["config"] == nil {
 		t.Errorf("Init.Config not unmarshalled correctly")
 	}
 }
@@ -77,19 +77,19 @@ func TestUnmarshalTruthyJSON(t *testing.T) {
 	if m, err := Parse(json); err != nil {
 		t.Error(err)
 	} else {
-		if ie := m.Init.Config.Commands["ps afx"].IgnoreErrors; ie != true {
+		if ie := m.Init.Configs["config"].Commands["ps afx"].IgnoreErrors; ie != true {
 			t.Errorf("%+v not interpreted as true", ie)
 		}
 
-		if wac := m.Init.Config.Commands["ps afx"].WaitAfterCompletion; wac != false {
+		if wac := m.Init.Configs["config"].Commands["ps afx"].WaitAfterCompletion; wac != false {
 			t.Errorf("%+v not interpreted as false", wac)
 		}
 
-		if e := m.Init.Config.Services.SysVInit["nginx"].Enabled; e != true {
+		if e := m.Init.Configs["config"].Services.SysVInit["nginx"].Enabled; e != true {
 			t.Errorf("%+v not interpreted as true", e)
 		}
 
-		if er := m.Init.Config.Services.SysVInit["nginx"].EnsureRunning; er != false {
+		if er := m.Init.Configs["config"].Services.SysVInit["nginx"].EnsureRunning; er != false {
 			t.Errorf("%+v not interpreted as false", er)
 		}
 	}
@@ -121,9 +121,6 @@ func TestConfigSets(t *testing.T) {
 	if m, err := Parse(json); err != nil {
 		t.Error(err)
 	} else {
-		if m.Init.Config != nil {
-			t.Errorf("Init.Config should be nil when processing configSets")
-		}
 		if _, ok := m.Init.Configs["configSets"]; ok {
 			t.Errorf(`Init.Configs["configSets"] should be nil when processing configSets`)
 		}

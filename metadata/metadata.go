@@ -17,25 +17,20 @@ func Parse(metadata string) (m Metadata, err error) {
 		return
 	}
 
-	// FIXME: we should validate the configsets
-
-	if m.Init.ConfigSets != nil {
-		var c ConfigSets
-		if err = json.Unmarshal(bytes, &c); err != nil {
-			return
-		}
-		// Bring the map of configs back to the metadata return value
-		m.Init.Configs = c.Configs
-		// We don't want the master config when we have a map of configs
-		m.Init.Config = nil
-		// The map of configs should not include a configSets member
-		delete(m.Init.Configs, "configSets")
+	var c Configs
+	if err = json.Unmarshal(bytes, &c); err != nil {
+		return
 	}
+	// Bring the map of configs back to the metadata return value
+	m.Init.Configs = c.Configs
+	// The map of configs should not include a configSets member
+	delete(m.Init.Configs, "configSets")
 
+	// FIXME: we should validate the configsets
 	return
 }
 
-func ParseJson(metadata string) (jsonString string, err error) {
+func ParseJson(metadata string) (j string, err error) {
 	bytes := []byte(metadata)
 	var d map[string]interface{}
 	if err := json.Unmarshal(bytes, &d); err != nil {
@@ -52,14 +47,14 @@ type Metadata struct {
 	Init *Init `json:"AWS::CloudFormation::Init"`
 }
 
+// Skips Configs which will be picked up on the second run
 type Init struct {
 	ConfigSets map[string][]interface{} `json:"configSets"`
-	Config     *Config                  `json:"config"`
-	Configs    map[string]*Config
+	Configs    map[string]*Config       `json:"-"`
 }
 
 // To fetch the map of configs when configSets != nil
-type ConfigSets struct {
+type Configs struct {
 	Configs map[string]*Config `json:"AWS::CloudFormation::Init"`
 }
 
