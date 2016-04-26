@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -109,7 +108,7 @@ func run() error {
 		return err
 	}
 
-	metadata, err := metadata.Parse(*res.StackResourceDetail.Metadata)
+	meta, err := metadata.Parse(*res.StackResourceDetail.Metadata)
 	if err != nil {
 		return err
 	}
@@ -126,36 +125,24 @@ func run() error {
 	}
 
 	// Write fetched metadata to file
-	f, err := os.Create(filepath.Join(data_dir, "metadata.json"))
+	json, err := metadata.ParseJson(*res.StackResourceDetail.Metadata)
 	if err != nil {
 		return err
 	}
 
-	j, err := prettyPrintJson([]byte(*res.StackResourceDetail.Metadata))
+	file, err := os.Create(filepath.Join(data_dir, "metadata.json"))
 	if err != nil {
 		return err
 	}
 
-	if n, err := f.WriteString(j); err != nil {
-		if n == len(j) {
+	if n, err := file.WriteString(json); err != nil {
+		if n == len(json) {
 			return err
 		} else {
-			return fmt.Errorf("only wrote %v bytes to %v", n, f)
+			return fmt.Errorf("only wrote %v bytes to %v", n, file)
 		}
 	}
 
-	spew.Dump(metadata)
+	spew.Dump(meta)
 	return nil
-}
-
-func prettyPrintJson(bytes []byte) (j string, err error) {
-	var d map[string]interface{}
-	if err := json.Unmarshal(bytes, &d); err != nil {
-		return "", err
-	}
-	b, err := json.MarshalIndent(d, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
 }

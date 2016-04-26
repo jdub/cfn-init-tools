@@ -33,6 +33,19 @@ func Parse(metadata string) (m Metadata, err error) {
 	return
 }
 
+func ParseJson(metadata string) (jsonString string, err error) {
+	bytes := []byte(metadata)
+	var d map[string]interface{}
+	if err := json.Unmarshal(bytes, &d); err != nil {
+		return "", err
+	}
+	b, err := json.MarshalIndent(d, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
 type Metadata struct {
 	Init *Init `json:"AWS::CloudFormation::Init"`
 }
