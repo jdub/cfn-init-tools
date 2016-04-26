@@ -1,12 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/jdub/cfn-init-tools/metadata"
 	"os"
 )
 
@@ -54,6 +55,11 @@ func main() {
 		url = fmt.Sprint("https://cloudformation.", region, ".amazonaws.com")
 	}
 
+	if configsets != "default" {
+		fmt.Println("configSets not supported yet")
+		return
+	}
+
 	fmt.Println("Variables")
 	fmt.Println("       stack: ", stack)
 	fmt.Println("    resource: ", resource)
@@ -74,28 +80,16 @@ func main() {
 	params := &cloudformation.DescribeStackResourceInput{LogicalResourceId: aws.String(resource), StackName: aws.String(stack)}
 
 	res, err := svc.DescribeStackResource(params)
-
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	var mush interface{}
-	err = json.Unmarshal([]byte(*res.StackResourceDetail.Metadata), &mush)
-	metadata := mush.(map[string]interface{})
-
-	if _, ok := metadata["AWS::CloudFormation::Init"]; ok {
-		fmt.Println(metadata)
+	metadata, err := metadata.Parse(*res.StackResourceDetail.Metadata)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
 	}
 
-	// for k, v := range metadata {
-	// 	switch vv := v.(type) {
-	// 	case string:
-	// 		fmt.Println(k, "is string", vv)
-	// 	default:
-	// 		fmt.Println(k, "is of a type I don't know how to handle")
-	// 	}
-	// }
-
-	//fmt.Printf("%v", metadata)
+	spew.Dump(metadata)
 }
