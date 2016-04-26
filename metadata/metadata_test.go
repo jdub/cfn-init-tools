@@ -34,10 +34,8 @@ func TestConfig(t *testing.T) {
 `
 	if m, err := Parse(json); err != nil {
 		t.Error(err)
-	} else {
-		if m.Init.Config == nil {
-			t.Errorf("config")
-		}
+	} else if m.Init.Config == nil {
+		t.Errorf("Init.Config not unmarshalled correctly")
 	}
 	return
 }
@@ -57,7 +55,8 @@ func TestUnmarshalTruthyJSON(t *testing.T) {
             "services": {
                 "sysvinit": {
                     "nginx": {
-                        "enabled": 1
+                        "enabled": 1,
+                        "ensureRunning": "0"
                     }
                 }
             }
@@ -76,8 +75,12 @@ func TestUnmarshalTruthyJSON(t *testing.T) {
 			t.Errorf("%+v not interpreted as false", wac)
 		}
 
-		if en := m.Init.Config.Services.SysVInit["nginx"].Enabled; en != true {
-			t.Errorf("%+v not interpreted as false", en)
+		if e := m.Init.Config.Services.SysVInit["nginx"].Enabled; e != true {
+			t.Errorf("%+v not interpreted as true", e)
+		}
+
+		if er := m.Init.Config.Services.SysVInit["nginx"].EnsureRunning; er != false {
+			t.Errorf("%+v not interpreted as false", er)
 		}
 	}
 	return
