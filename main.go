@@ -77,6 +77,10 @@ func run() error {
 	fmt.Println(" https_proxy: ", https_proxy)
 	fmt.Println("     verbose: ", verbose)
 
+	if stack == "" || resource == "" {
+		return errors.New("You must specify both a stack name and logical resource id")
+	}
+
 	config := aws.NewConfig()
 
 	config.Region = aws.String(region)
