@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"github.com/jdub/cfn-init-tools/metadata"
 	"net/url"
 	"os"
+	"path/filepath"
 	"runtime"
 )
 
@@ -112,6 +114,48 @@ func run() error {
 		return err
 	}
 
+	// Prepare the data_dir
+	if runtime.GOOS == "windows" {
+		data_dir = os.ExpandEnv(`${SystemDrive}\cfn\cfn-init\data`)
+	} else {
+		data_dir = "/var/lib/cfn-init/data"
+	}
+
+	if err := os.MkdirAll(data_dir, 0644); err != nil {
+		return err
+	}
+
+	// Write fetched metadata to file
+	f, err := os.Create(filepath.Join(data_dir, "metadata.json"))
+	if err != nil {
+		return err
+	}
+
+	j, err := prettyPrintJson([]byte(*res.StackResourceDetail.Metadata))
+	if err != nil {
+		return err
+	}
+
+	if n, err := f.WriteString(j); err != nil {
+		if n == len(j) {
+			return err
+		} else {
+			return fmt.Errorf("only wrote %v bytes to %v", n, f)
+		}
+	}
+
 	spew.Dump(metadata)
 	return nil
+}
+
+func prettyPrintJson(bytes []byte) (j string, err error) {
+	var d map[string]interface{}
+	if err := json.Unmarshal(bytes, &d); err != nil {
+		return "", err
+	}
+	b, err := json.MarshalIndent(d, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
