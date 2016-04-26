@@ -19,12 +19,17 @@ var (
 	resource    string
 	region      string
 	credfile    string
+	iam_role    string
+	access_key  string
+	secret_key  string
 	configsets  string
 	endpoint    string
 	http_proxy  string
 	https_proxy string
 	verbose     bool
 	resume      bool
+
+	data_dir string
 )
 
 func init() {
@@ -36,22 +41,29 @@ func init() {
 
 	flag.StringVar(&region, "region", "us-east-1", "The AWS CloudFormation regional endpoint to use.")
 
-	flag.StringVar(&credfile, "credential-file", "", "A file that contains both a secret access key and an access key.")
-	flag.StringVar(&credfile, "f", "", "A file that contains both a secret access key and an access key.")
+	flag.StringVar(&credfile, "credential-file", "", "OBSOLETE: Use a standard credentials file.")
+	flag.StringVar(&credfile, "f", "", "OBSOLETE: Use a standard credentials file.")
+
+	flag.StringVar(&iam_role, "role", "", "OBSOLETE: IAM Role credentials will be used automatically.")
+
+	flag.StringVar(&access_key, "access-key", "", "OBSOLETE: Use a standard credentials file or AWS_ACCESS_KEY_ID environment variable.")
+
+	flag.StringVar(&secret_key, "secret-key", "", "OBSOLETE: Use a standard credentials file or AWS_SECRET_ACCESS_KEY environment variable.")
 
 	flag.StringVar(&configsets, "configsets", "default", "A comma-separated list of configsets to run (in order).")
 	flag.StringVar(&configsets, "c", "default", "A comma-separated list of configsets to run (in order).")
 
-	flag.StringVar(&endpoint, "url", "", "The AWS CloudFormation endpoint to use.")
-	flag.StringVar(&endpoint, "u", "", "The AWS CloudFormation endpoint to use.")
+	flag.StringVar(&endpoint, "url", "", "The AWS CloudFormation endpoint to use. Not recommended.")
+	flag.StringVar(&endpoint, "u", "", "The AWS CloudFormation endpoint to use. Not recommended.")
 
 	flag.StringVar(&http_proxy, "http-proxy", "", "An HTTP proxy (non-SSL). Use the following format: http://user:password@host:port")
+
 	flag.StringVar(&https_proxy, "https-proxy", "", "An HTTPS proxy. Use the following format: https://user:password@host:port")
 
 	flag.BoolVar(&verbose, "v", false, "Verbose output. This is useful for debugging cases where cfn-init is failing to initialize.")
 
 	if runtime.GOOS == "windows" {
-		flag.BoolVar(&resume, "resume", false, "Resume from a previous cfn-init run")
+		flag.BoolVar(&resume, "resume", false, "Resume from a previous cfn-init run.")
 	}
 }
 
@@ -68,6 +80,9 @@ func run() error {
 	if stack == "" || resource == "" {
 		return errors.New("You must specify both a stack name and logical resource id")
 	}
+
+	// FIXME: should we provide a workaround for aws-sdk-go's AWS_PROFILE vs. standard AWS_DEFAULT_PROFILE?
+	// FIXME: handle http/https_proxy
 
 	config := aws.NewConfig()
 
