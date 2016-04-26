@@ -12,7 +12,7 @@ func Parse(metadata string) (m Metadata, err error) {
 		return
 	}
 
-	if m == (Metadata{}) {
+	if m.Init == nil {
 		err = fmt.Errorf("Could not find 'AWS::CloudFormation::Init' key in metadata")
 		return
 	}
