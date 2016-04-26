@@ -17,6 +17,8 @@ func Parse(metadata string) (m Metadata, err error) {
 		return
 	}
 
+	// FIXME: we should validate the configsets
+
 	if m.Init.ConfigSets != nil {
 		var c ConfigSets
 		if err = json.Unmarshal(bytes, &c); err != nil {
