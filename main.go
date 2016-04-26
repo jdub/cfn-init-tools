@@ -63,19 +63,7 @@ func main() {
 }
 
 func run() error {
-	//fmt.Println("Os.Args:", os.Args)
 	flag.Parse()
-
-	fmt.Println("Variables")
-	fmt.Println("       stack: ", stack)
-	fmt.Println("    resource: ", resource)
-	fmt.Println("      region: ", region)
-	fmt.Println("    credfile: ", credfile)
-	fmt.Println("  configsets: ", configsets)
-	fmt.Println("         url: ", endpoint)
-	fmt.Println("  http_proxy: ", http_proxy)
-	fmt.Println(" https_proxy: ", https_proxy)
-	fmt.Println("     verbose: ", verbose)
 
 	if stack == "" || resource == "" {
 		return errors.New("You must specify both a stack name and logical resource id")
