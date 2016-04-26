@@ -11,6 +11,7 @@ import (
 	"github.com/jdub/cfn-init-tools/metadata"
 	"net/url"
 	"os"
+	"runtime"
 )
 
 var (
@@ -23,6 +24,7 @@ var (
 	http_proxy  string
 	https_proxy string
 	verbose     bool
+	resume      bool
 )
 
 func init() {
@@ -47,6 +49,10 @@ func init() {
 	flag.StringVar(&https_proxy, "https-proxy", "", "An HTTPS proxy. Use the following format: https://user:password@host:port")
 
 	flag.BoolVar(&verbose, "v", false, "Verbose output. This is useful for debugging cases where cfn-init is failing to initialize.")
+
+	if runtime.GOOS == "windows" {
+		flag.BoolVar(&resume, "resume", false, "Resume from a previous cfn-init run")
+	}
 }
 
 func main() {
