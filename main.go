@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -8,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/jdub/cfn-init-tools/metadata"
-	"os"
+	"net/url"
 )
 
 var (
@@ -17,7 +18,7 @@ var (
 	region      string
 	credfile    string
 	configsets  string
-	url         string
+	endpoint    string
 	http_proxy  string
 	https_proxy string
 	verbose     bool
@@ -38,8 +39,8 @@ func init() {
 	flag.StringVar(&configsets, "configsets", "default", "A comma-separated list of configsets to run (in order).")
 	flag.StringVar(&configsets, "c", "default", "A comma-separated list of configsets to run (in order).")
 
-	flag.StringVar(&url, "url", "", "The AWS CloudFormation endpoint to use.")
-	flag.StringVar(&url, "u", "", "The AWS CloudFormation endpoint to use.")
+	flag.StringVar(&endpoint, "url", "", "The AWS CloudFormation endpoint to use.")
+	flag.StringVar(&endpoint, "u", "", "The AWS CloudFormation endpoint to use.")
 
 	flag.StringVar(&http_proxy, "http-proxy", "", "An HTTP proxy (non-SSL). Use the following format: http://user:password@host:port")
 	flag.StringVar(&https_proxy, "https-proxy", "", "An HTTPS proxy. Use the following format: https://user:password@host:port")
@@ -48,17 +49,8 @@ func init() {
 }
 
 func main() {
-	fmt.Println("Os.Args:", os.Args)
+	//fmt.Println("Os.Args:", os.Args)
 	flag.Parse()
-
-	if url == "" {
-		url = fmt.Sprint("https://cloudformation.", region, ".amazonaws.com")
-	}
-
-	if configsets != "default" {
-		fmt.Println("configSets not supported yet")
-		return
-	}
 
 	fmt.Println("Variables")
 	fmt.Println("       stack: ", stack)
@@ -66,14 +58,25 @@ func main() {
 	fmt.Println("      region: ", region)
 	fmt.Println("    credfile: ", credfile)
 	fmt.Println("  configsets: ", configsets)
-	fmt.Println("         url: ", url)
+	fmt.Println("         url: ", endpoint)
 	fmt.Println("  http_proxy: ", http_proxy)
 	fmt.Println(" https_proxy: ", https_proxy)
 	fmt.Println("     verbose: ", verbose)
 
 	config := aws.NewConfig()
+
 	config.Region = aws.String(region)
-	//config.Endpoint = aws.String(url)
+
+	if endpoint != "" {
+		if u, err := url.Parse(endpoint); err != nil {
+			fmt.Println(err.Error())
+		} else if u.Scheme == "" {
+			fmt.Println(errors.New("invalid endpoint url"))
+			return
+		} else {
+			config.Endpoint = aws.String(u.String())
+		}
+	}
 
 	svc := cloudformation.New(session.New(), config)
 
