@@ -4,6 +4,18 @@ import (
 	"testing"
 )
 
+func TestParseJson(t *testing.T) {
+	json := `{"pants": "shirt"}`
+	pretty := `{
+  "pants": "shirt"
+}`
+	if j, err := ParseJson(json); err != nil {
+		t.Error(err)
+	} else if j != pretty {
+		t.Errorf("%v != %v", j, pretty)
+	}
+}
+
 func TestEmpty(t *testing.T) {
 	json := `{}`
 	// No, Mr. Bond, I expect you to die!
@@ -21,7 +33,6 @@ func TestInit(t *testing.T) {
 	if _, err := Parse(json); err != nil {
 		t.Error(err)
 	}
-	return
 }
 
 func TestConfig(t *testing.T) {
@@ -37,7 +48,6 @@ func TestConfig(t *testing.T) {
 	} else if m.Init.Config == nil {
 		t.Errorf("Init.Config not unmarshalled correctly")
 	}
-	return
 }
 
 func TestUnmarshalTruthyJSON(t *testing.T) {
@@ -83,7 +93,6 @@ func TestUnmarshalTruthyJSON(t *testing.T) {
 			t.Errorf("%+v not interpreted as false", er)
 		}
 	}
-	return
 }
 
 func TestConfigSets(t *testing.T) {
@@ -123,6 +132,4 @@ func TestConfigSets(t *testing.T) {
 		}
 		// FIXME: test configSets themselves
 	}
-
-	return
 }
