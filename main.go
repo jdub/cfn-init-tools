@@ -10,6 +10,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/jdub/cfn-init-tools/metadata"
 	"net/url"
+	"os"
 )
 
 var (
@@ -49,6 +50,13 @@ func init() {
 }
 
 func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	//fmt.Println("Os.Args:", os.Args)
 	flag.Parse()
 
@@ -69,10 +77,9 @@ func main() {
 
 	if endpoint != "" {
 		if u, err := url.Parse(endpoint); err != nil {
-			fmt.Println(err.Error())
+			return err
 		} else if u.Scheme == "" {
-			fmt.Println(errors.New("invalid endpoint url"))
-			return
+			return errors.New("invalid endpoint url")
 		} else {
 			config.Endpoint = aws.String(u.String())
 		}
@@ -84,15 +91,14 @@ func main() {
 
 	res, err := svc.DescribeStackResource(params)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 
 	metadata, err := metadata.Parse(*res.StackResourceDetail.Metadata)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 
 	spew.Dump(metadata)
+	return nil
 }
