@@ -82,7 +82,7 @@ func run() error {
 		if u, err := url.Parse(endpoint); err != nil {
 			return err
 		} else if u.Scheme == "" {
-			return fmt.Errorf("invalid endpoint url")
+			return fmt.Errorf("invalid endpoint url: %v", endpoint)
 		} else {
 			config.Endpoint = aws.String(u.String())
 		}
