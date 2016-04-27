@@ -1,0 +1,55 @@
+(metadata.Metadata) {
+ Authentication: (map[string]*metadata.Authentication) <nil>,
+ Init: (*metadata.Init)(0xc820446490)({
+  ConfigSets: (map[string][]interface {}) <nil>,
+  Configs: (map[string]*metadata.Config) (len=1) {
+   (string) (len=6) "config": (*metadata.Config)(0xc8203a9040)({
+    Packages: (map[string]*metadata.Package) <nil>,
+    Groups: (map[string]*metadata.Group) <nil>,
+    Users: (map[string]*metadata.User) <nil>,
+    Sources: (map[string]string) <nil>,
+    Files: (map[string]*metadata.File) (len=2) {
+     (string) (len=31) "/etc/nginx/snippets/bucket.conf": (*metadata.File)(0xc8202cc000)({
+      Content: (string) (len=61) "set $bucket 'tango-cpkbucket-eyhbqtf05mhg.s3.amazonaws.com';\n",
+      Source: (string) "",
+      Encoding: (string) "",
+      Group: (string) "",
+      Owner: (string) "",
+      Mode: (string) "",
+      Authentication: (string) "",
+      Context: (map[string]json.RawMessage) <nil>
+     }),
+     (string) (len=33) "/var/awslogs/etc/config/nginx.ini": (*metadata.File)(0xc8202cc080)({
+      Content: (string) (len=374) "[/var/log/nginx/access.log]\nlog_group_name = tango-NginxAccessLogGroup-1AG2SGHWU1KV1\nlog_stream_name = {instance_id}\nfile = /var/log/nginx/access.log*\ndatetime_format = %d/%b/%Y:%H:%M:%S %z\n\n[/var/log/nginx/imei.log]\nlog_group_name = tango-NginxIMEILogGroup-E115YLUYUS84\nlog_stream_name = {instance_id}\nfile = /var/log/nginx/imei.log*\ndatetime_format = %d/%b/%Y:%H:%M:%S %z\n",
+      Source: (string) "",
+      Encoding: (string) "",
+      Group: (string) "",
+      Owner: (string) "",
+      Mode: (string) "",
+      Authentication: (string) "",
+      Context: (map[string]json.RawMessage) <nil>
+     })
+    },
+    Commands: (map[string]*metadata.Command) (len=2) {
+     (string) (len=5) "nginx": (*metadata.Command)(0xc8203a90c0)({
+      Command: (string) (len=21) "service nginx restart",
+      Env: (map[string]string) <nil>,
+      Cwd: (string) "",
+      Test: (string) "",
+      IgnoreErrors: (metadata.JavaScriptBoolean) false,
+      WaitAfterCompletion: (metadata.JavaScriptBoolean) false
+     }),
+     (string) (len=7) "awslogs": (*metadata.Command)(0xc8203a9100)({
+      Command: (string) (len=23) "service awslogs restart",
+      Env: (map[string]string) <nil>,
+      Cwd: (string) "",
+      Test: (string) "",
+      IgnoreErrors: (metadata.JavaScriptBoolean) false,
+      WaitAfterCompletion: (metadata.JavaScriptBoolean) false
+     })
+    },
+    Services: (*metadata.ServiceManager)(<nil>)
+   })
+  }
+ })
+}
