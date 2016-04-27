@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -79,7 +78,7 @@ func run() error {
 	flag.Parse()
 
 	if stack == "" || resource == "" {
-		return errors.New("You must specify both a stack name and logical resource id")
+		return fmt.Errorf("You must specify both a stack name and logical resource id")
 	}
 
 	// FIXME: should we provide a workaround for aws-sdk-go's AWS_PROFILE vs. standard AWS_DEFAULT_PROFILE?
@@ -93,7 +92,7 @@ func run() error {
 		if u, err := url.Parse(endpoint); err != nil {
 			return err
 		} else if u.Scheme == "" {
-			return errors.New("invalid endpoint url")
+			return fmt.Errorf("invalid endpoint url")
 		} else {
 			config.Endpoint = aws.String(u.String())
 		}
