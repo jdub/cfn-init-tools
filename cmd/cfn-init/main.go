@@ -92,7 +92,7 @@ func run() error {
 		if u, err := url.Parse(endpoint); err != nil {
 			return err
 		} else if u.Scheme == "" {
-			return fmt.Errorf("invalid endpoint url")
+			return fmt.Errorf("invalid endpoint url: %v", endpoint)
 		} else {
 			config.Endpoint = aws.String(u.String())
 		}
@@ -120,25 +120,25 @@ func run() error {
 	}
 
 	if err := os.MkdirAll(data_dir, 0644); err != nil {
-		return err
-	}
-
-	// Write fetched metadata to file
-	json, err := metadata.ParseJson(*res.StackResourceDetail.Metadata)
-	if err != nil {
-		return err
-	}
-
-	file, err := os.Create(filepath.Join(data_dir, "metadata.json"))
-	if err != nil {
-		return err
-	}
-
-	if n, err := file.WriteString(json); err != nil {
-		if n == len(json) {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	} else {
+		// Write fetched metadata to file
+		json, err := metadata.ParseJson(*res.StackResourceDetail.Metadata)
+		if err != nil {
 			return err
-		} else {
-			return fmt.Errorf("only wrote %v bytes to %v", n, file)
+		}
+
+		file, err := os.Create(filepath.Join(data_dir, "metadata.json"))
+		if err != nil {
+			return err
+		}
+
+		if n, err := file.WriteString(json); err != nil {
+			if n == len(json) {
+				return err
+			} else {
+				return fmt.Errorf("only wrote %v bytes to %v", n, file)
+			}
 		}
 	}
 
