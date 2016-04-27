@@ -1,17 +1,18 @@
 package main
 
 import (
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/jdub/cfn-init-tools/metadata"
 	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 )
 
 var (
@@ -120,7 +121,7 @@ func run() error {
 	}
 
 	if err := os.MkdirAll(data_dir, 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error: Could not create data directory: %v\n", data_dir)
 	} else {
 		// Write fetched metadata to file
 		json, err := metadata.ParseJson(*res.StackResourceDetail.Metadata)
@@ -142,6 +143,93 @@ func run() error {
 		}
 	}
 
-	spew.Dump(meta)
+	for name, attr := range meta.Init.Configs["config"].Files {
+		if !filepath.IsAbs(name) {
+			fmt.Fprintf(os.Stderr, "Error: File specified with non-absolute path: %v\n", name)
+			continue
+		}
+
+		parent := filepath.Dir(name)
+		if err := os.MkdirAll(parent, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Could not create parent directory: %v\n", parent)
+			continue
+		}
+
+		mode, err := FileModeFromString(attr.Mode)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		}
+
+		symlink := mode&os.ModeSymlink == os.ModeSymlink
+
+		if symlink {
+			if attr.Content == "" {
+				fmt.Fprintf(os.Stderr, "Error: Symbolic link specified without a destination")
+				continue
+			}
+
+			i, err := os.Lstat(name)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: Could not get info on file: %v", name)
+				continue
+			}
+
+			if i.Mode()&os.ModeSymlink != os.ModeSymlink {
+				// unlink and write symlink
+			}
+
+			l, err := os.Readlink(name)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: Could not determine destination for symlink: %v", name)
+				continue
+			}
+
+			if l != attr.Content {
+				// now compare then do a write temp / rename
+			}
+		}
+
+		file, err := os.OpenFile(name, os.O_CREATE, os.FileMode(mode))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Could not create file: %v\n", name)
+			continue
+		}
+
+		var d []byte
+		if attr.Encoding == "base64" {
+			d, err = base64.StdEncoding.DecodeString(attr.Content)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: Could not decode base64 content for file: %v", name)
+				continue
+			}
+		} else {
+			d = []byte(attr.Content)
+		}
+
+		n, err := file.Write(d)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Failed to write %v bytes to %v\n", n, name)
+			continue
+		}
+
+		fmt.Printf("# %v:\n", name)
+		fmt.Println(attr.Content)
+		fmt.Println()
+	}
+
+	//spew.Dump(meta)
 	return nil
+}
+
+func FileModeFromString(perm string) (mode os.FileMode, err error) {
+	if perm == "" {
+		return os.FileMode(0), fmt.Errorf("empty perm")
+	}
+
+	m, err := strconv.ParseInt(perm, 8, 32)
+	if err != nil {
+		return os.FileMode(0), fmt.Errorf("unable to parse perm")
+	}
+
+	return os.FileMode(m), nil
 }
