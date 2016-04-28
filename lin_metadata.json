@@ -1,0 +1,22 @@
+{
+  "AWS::CloudFormation::Init": {
+    "config": {
+      "commands": {
+        "awslogs": {
+          "command": "service awslogs restart"
+        },
+        "nginx": {
+          "command": "service nginx restart"
+        }
+      },
+      "files": {
+        "/tmp/etc/nginx/snippets/bucket.conf": {
+          "content": "set $bucket 'tango-cpkbucket-eyhbqtf05mhg.s3.amazonaws.com';\n"
+        },
+        "/tmp/var/awslogs/etc/config/nginx.ini": {
+          "content": "[/var/log/nginx/access.log]\nlog_group_name = tango-NginxAccessLogGroup-1AG2SGHWU1KV1\nlog_stream_name = {instance_id}\nfile = /var/log/nginx/access.log*\ndatetime_format = %d/%b/%Y:%H:%M:%S %z\n\n[/var/log/nginx/imei.log]\nlog_group_name = tango-NginxIMEILogGroup-E115YLUYUS84\nlog_stream_name = {instance_id}\nfile = /var/log/nginx/imei.log*\ndatetime_format = %d/%b/%Y:%H:%M:%S %z\n"
+        }
+      }
+    }
+  }
+}
