@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/jdub/cfn-init-tools/metadata"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 )
 
 var (
+	local       string
 	stack       string
 	resource    string
 	region      string
@@ -34,6 +36,8 @@ var (
 )
 
 func init() {
+	flag.StringVar(&local, "local", "", "A local metadata JSON file")
+
 	flag.StringVar(&stack, "stack", "", "Name of the Stack.")
 	flag.StringVar(&stack, "s", "", "Name of the Stack.")
 
@@ -78,37 +82,50 @@ func main() {
 func run() error {
 	flag.Parse()
 
-	if stack == "" || resource == "" {
-		return fmt.Errorf("You must specify both a stack name and logical resource id")
-	}
+	var input string
 
-	// FIXME: should we provide a workaround for aws-sdk-go's AWS_PROFILE vs. standard AWS_DEFAULT_PROFILE?
-	// FIXME: handle http/https_proxy
-
-	config := aws.NewConfig()
-
-	config.Region = aws.String(region)
-
-	if endpoint != "" {
-		if u, err := url.Parse(endpoint); err != nil {
+	if local != "" {
+		if b, err := ioutil.ReadFile(local); err != nil {
 			return err
-		} else if u.Scheme == "" {
-			return fmt.Errorf("invalid endpoint url: %v", endpoint)
 		} else {
-			config.Endpoint = aws.String(u.String())
+			input = string(b)
 		}
+
+	} else {
+		if stack == "" || resource == "" {
+			return fmt.Errorf("You must specify both a stack name and logical resource id")
+		}
+
+		// FIXME: should we provide a workaround for aws-sdk-go's AWS_PROFILE vs. standard AWS_DEFAULT_PROFILE?
+		// FIXME: handle http/https_proxy
+
+		config := aws.NewConfig()
+
+		config.Region = aws.String(region)
+
+		if endpoint != "" {
+			if u, err := url.Parse(endpoint); err != nil {
+				return err
+			} else if u.Scheme == "" {
+				return fmt.Errorf("invalid endpoint url: %v", endpoint)
+			} else {
+				config.Endpoint = aws.String(u.String())
+			}
+		}
+
+		svc := cloudformation.New(session.New(), config)
+
+		params := &cloudformation.DescribeStackResourceInput{LogicalResourceId: aws.String(resource), StackName: aws.String(stack)}
+
+		res, err := svc.DescribeStackResource(params)
+		if err != nil {
+			return err
+		}
+
+		input = *res.StackResourceDetail.Metadata
 	}
 
-	svc := cloudformation.New(session.New(), config)
-
-	params := &cloudformation.DescribeStackResourceInput{LogicalResourceId: aws.String(resource), StackName: aws.String(stack)}
-
-	res, err := svc.DescribeStackResource(params)
-	if err != nil {
-		return err
-	}
-
-	meta, err := metadata.Parse(*res.StackResourceDetail.Metadata)
+	meta, err := metadata.Parse(input)
 	if err != nil {
 		return err
 	}
@@ -124,22 +141,15 @@ func run() error {
 		fmt.Fprintf(os.Stderr, "Error: Could not create data directory: %v\n", data_dir)
 	} else {
 		// Write fetched metadata to file
-		json, err := metadata.ParseJson(*res.StackResourceDetail.Metadata)
+		json, err := metadata.ParseJson(input)
 		if err != nil {
 			return err
 		}
 
-		file, err := os.Create(filepath.Join(data_dir, "metadata.json"))
-		if err != nil {
+		name := filepath.Join(data_dir, "metadata.json")
+		if err := ioutil.WriteFile(name, []byte(json), os.FileMode(0644)); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Failed to write %v\n", name)
 			return err
-		}
-
-		if n, err := file.WriteString(json); err != nil {
-			if n == len(json) {
-				return err
-			} else {
-				return fmt.Errorf("only wrote %v bytes to %v", n, file)
-			}
 		}
 	}
 
@@ -155,11 +165,7 @@ func run() error {
 			continue
 		}
 
-		mode, err := FileModeFromString(attr.Mode)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		}
-
+		mode, _ := FileModeFromString(attr.Mode)
 		symlink := mode&os.ModeSymlink == os.ModeSymlink
 
 		if symlink {
@@ -189,12 +195,6 @@ func run() error {
 			}
 		}
 
-		file, err := os.OpenFile(name, os.O_CREATE, os.FileMode(mode))
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: Could not create file: %v\n", name)
-			continue
-		}
-
 		var d []byte
 		if attr.Encoding == "base64" {
 			d, err = base64.StdEncoding.DecodeString(attr.Content)
@@ -206,15 +206,12 @@ func run() error {
 			d = []byte(attr.Content)
 		}
 
-		n, err := file.Write(d)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: Failed to write %v bytes to %v\n", n, name)
+		if err := ioutil.WriteFile(name, d, mode); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Failed to write %v\n", name)
 			continue
 		}
 
-		fmt.Printf("# %v:\n", name)
-		fmt.Println(attr.Content)
-		fmt.Println()
+		fmt.Printf("Wrote: %v\n", name)
 	}
 
 	//spew.Dump(meta)
