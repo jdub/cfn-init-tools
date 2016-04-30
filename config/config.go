@@ -21,6 +21,7 @@
 package config
 
 type Config struct {
+	Local      string
 	Stack      string
 	Resource   string
 	Region     string

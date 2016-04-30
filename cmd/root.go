@@ -35,6 +35,8 @@ var RootCmd = &cobra.Command{
 }
 
 func init() {
+	RootCmd.PersistentFlags().StringVar(&Config.Local, "local", "", "Local metadata JSON file")
+
 	RootCmd.PersistentFlags().StringVarP(&Config.Stack, "stack", "s", "", "A CloudFormation stack")
 	RootCmd.PersistentFlags().StringVarP(&Config.Resource, "resource", "r", "", "A CloudFormation logical resource ID")
 	RootCmd.PersistentFlags().StringVar(&Config.Region, "region", "us-east-1", "The CloudFormation region")

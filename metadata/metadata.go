@@ -27,11 +27,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/jdub/cfn-init-tools/config"
+	"io/ioutil"
 	"net/url"
 	"strings"
 )
 
 func Fetch(conf config.Config) (metadata string, err error) {
+	if conf.Local != "" {
+		if b, err := ioutil.ReadFile(conf.Local); err != nil {
+			return "", err
+		} else {
+			return string(b), nil
+		}
+	}
+
 	endpoint := ""
 	if conf.Url != "" {
 		if u, err := url.Parse(conf.Url); err != nil {
