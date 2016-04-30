@@ -28,8 +28,9 @@ import (
 )
 
 var (
-	resume  bool
-	verbose bool
+	configSets string
+	resume     bool
+	verbose    bool
 )
 
 // initCmd represents the init command
@@ -46,11 +47,11 @@ var initCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(initCmd)
 
-	initCmd.Flags().StringVarP(&Stack, "configsets", "c", "default", "An optional list of configSets")
+	initCmd.Flags().StringVarP(&configSets, "configsets", "c", "default", "An optional list of configSets")
 
 	initCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enables verbose logging")
 
 	if runtime.GOOS == "windows" {
-		initCmd.Flags().BoolVarP(&resume, "resume", "", false, "Resume from a previous cfn-init run")
+		initCmd.Flags().BoolVar(&resume, "resume", false, "Resume from a previous cfn-init run")
 	}
 }

@@ -21,20 +21,12 @@
 package cmd
 
 import (
+	"github.com/jdub/cfn-init-tools/config"
 	"github.com/spf13/cobra"
 )
 
 var (
-	Stack      string
-	Resource   string
-	Region     string
-	Url        string
-	HttpProxy  string
-	HttpsProxy string
-	CredFile   string
-	Role       string
-	AccessKey  string
-	SecretKey  string
+	Config config.Config
 )
 
 var RootCmd = &cobra.Command{
@@ -44,16 +36,16 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	//cobra.OnInitialize(initConfig)
-	RootCmd.PersistentFlags().StringVarP(&Stack, "stack", "s", "", "A CloudFormation stack")
-	RootCmd.PersistentFlags().StringVarP(&Resource, "resource", "r", "", "A CloudFormation logical resource ID")
-	RootCmd.PersistentFlags().StringVarP(&Region, "region", "", "us-east-1", "The CloudFormation region")
-	RootCmd.PersistentFlags().StringVarP(&Url, "url", "u", "", "The CloudFormation service URL. The endpoint URL must match the region option. Use of this parameter is discouraged.")
+	RootCmd.PersistentFlags().StringVarP(&Config.Stack, "stack", "s", "", "A CloudFormation stack")
+	RootCmd.PersistentFlags().StringVarP(&Config.Resource, "resource", "r", "", "A CloudFormation logical resource ID")
+	RootCmd.PersistentFlags().StringVar(&Config.Region, "region", "us-east-1", "The CloudFormation region")
+	RootCmd.PersistentFlags().StringVarP(&Config.Url, "url", "u", "", "The CloudFormation service URL. The endpoint URL must match the region option. Use of this parameter is discouraged.")
 
-	RootCmd.PersistentFlags().StringVarP(&CredFile, "credential-file", "f", "", "OBSOLETE: Use a standard credentials file and/or AWS_PROFILE environment variable")
-	RootCmd.PersistentFlags().StringVarP(&Role, "role", "", "", "OBSOLETE: IAM Role credentials will be used automatically")
-	RootCmd.PersistentFlags().StringVarP(&AccessKey, "access-key", "", "", "OBSOLETE: Use a standard credentials file or AWS_ACCESS_KEY_ID environment variable")
-	RootCmd.PersistentFlags().StringVarP(&SecretKey, "secret-key", "", "", "OBSOLETE: Use a standard credentials file or AWS_SECRET_ACCESS_KEY environment variable")
+	RootCmd.PersistentFlags().StringVarP(&Config.CredFile, "credential-file", "f", "", "OBSOLETE: Use a standard credentials file and/or AWS_PROFILE environment variable")
+	RootCmd.PersistentFlags().StringVar(&Config.Role, "role", "", "OBSOLETE: IAM Role credentials will be used automatically")
+	RootCmd.PersistentFlags().StringVar(&Config.AccessKey, "access-key", "", "OBSOLETE: Use a standard credentials file or AWS_ACCESS_KEY_ID environment variable")
+	RootCmd.PersistentFlags().StringVar(&Config.SecretKey, "secret-key", "", "OBSOLETE: Use a standard credentials file or AWS_SECRET_ACCESS_KEY environment variable")
 
-	RootCmd.PersistentFlags().StringVar(&HttpProxy, "http-proxy", "", "A (non-SSL) HTTP proxy")
-	RootCmd.PersistentFlags().StringVar(&HttpsProxy, "https-proxy", "", "An HTTPS proxy")
+	RootCmd.PersistentFlags().StringVar(&Config.HttpProxy, "http-proxy", "", "A (non-SSL) HTTP proxy")
+	RootCmd.PersistentFlags().StringVar(&Config.HttpsProxy, "https-proxy", "", "An HTTPS proxy")
 }

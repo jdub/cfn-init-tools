@@ -6,29 +6,32 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/jdub/cfn-init-tools/config"
 	"net/url"
 	"strings"
 )
 
-func Fetch(region string, endpoint string, stack string, resource string) (metadata string, err error) {
-	// FIXME: should probably receive a config struct
-	config := aws.NewConfig()
-
-	config.Region = aws.String(region)
-
-	if endpoint != "" {
-		if u, err := url.Parse(endpoint); err != nil {
+func Fetch(conf config.Config) (metadata string, err error) {
+	endpoint := ""
+	if conf.Url != "" {
+		if u, err := url.Parse(conf.Url); err != nil {
 			return "", err
 		} else if u.Scheme == "" {
-			return "", fmt.Errorf("invalid endpoint url: %v", endpoint)
+			return "", fmt.Errorf("invalid endpoint url: %v", conf.Url)
 		} else {
-			config.Endpoint = aws.String(u.String())
+			endpoint = u.String()
 		}
 	}
 
-	svc := cloudformation.New(session.New(), config)
+	svc := cloudformation.New(session.New(), &aws.Config{
+		Region:   aws.String(conf.Region),
+		Endpoint: aws.String(endpoint),
+	})
 
-	params := &cloudformation.DescribeStackResourceInput{LogicalResourceId: aws.String(resource), StackName: aws.String(stack)}
+	params := &cloudformation.DescribeStackResourceInput{
+		LogicalResourceId: aws.String(conf.Resource),
+		StackName:         aws.String(conf.Stack),
+	}
 
 	res, err := svc.DescribeStackResource(params)
 	if err != nil {
