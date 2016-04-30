@@ -45,7 +45,6 @@ func init() {
 }
 
 func getMetadata(cmd *cobra.Command, args []string) error {
-	// FIXME: should probably pass a config struct
 	meta, err := metadata.Fetch(Config)
 	if err != nil {
 		return err
