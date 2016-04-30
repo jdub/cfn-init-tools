@@ -1,0 +1,27 @@
+main
+- arg[0] without the directory, without the extension, split by first -
+  ./cfn-init = [cfn, init]
+  C:\cfn\cfn-get-metadata.exe = [cfn, get-metadata]
+  cfn = [cfn]
+
+thus,
+- main handles cfn (rarely called, but explains subcommands)
+- cmd/init.go handles cfn-init
+
+cfn has global options (common sets that subcommands use?), incl
+- stack
+- resource
+- url (endpoint)
+- region
+- credential-file
+- role
+- access-key
+- secret-key
+- http-proxy
+- https-proxy
+
+commands
+- init
+- signal
+- get-metadata
+- hup *** does not accept global options
