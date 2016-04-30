@@ -3,8 +3,40 @@ package metadata
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"net/url"
 	"strings"
 )
+
+func Fetch(region string, endpoint string, stack string, resource string) (metadata string, err error) {
+	// FIXME: should probably receive a config struct
+	config := aws.NewConfig()
+
+	config.Region = aws.String(region)
+
+	if endpoint != "" {
+		if u, err := url.Parse(endpoint); err != nil {
+			return "", err
+		} else if u.Scheme == "" {
+			return "", fmt.Errorf("invalid endpoint url: %v", endpoint)
+		} else {
+			config.Endpoint = aws.String(u.String())
+		}
+	}
+
+	svc := cloudformation.New(session.New(), config)
+
+	params := &cloudformation.DescribeStackResourceInput{LogicalResourceId: aws.String(resource), StackName: aws.String(stack)}
+
+	res, err := svc.DescribeStackResource(params)
+	if err != nil {
+		return "", err
+	}
+
+	return *res.StackResourceDetail.Metadata, nil
+}
 
 func Parse(metadata string) (m Metadata, err error) {
 	bytes := []byte(metadata)
@@ -30,16 +62,19 @@ func Parse(metadata string) (m Metadata, err error) {
 	return
 }
 
-func ParseJson(metadata string) (j string, err error) {
+func ParseJson(metadata string, key string) (j string, err error) {
 	bytes := []byte(metadata)
+
 	var d map[string]interface{}
 	if err := json.Unmarshal(bytes, &d); err != nil {
 		return "", err
 	}
+
 	b, err := json.MarshalIndent(d, "", "  ")
 	if err != nil {
 		return "", err
 	}
+
 	return string(b), nil
 }
 

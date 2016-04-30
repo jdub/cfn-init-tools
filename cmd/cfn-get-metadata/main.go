@@ -3,11 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/jdub/cfn-init-tools/metadata"
-	"net/url"
 	"os"
 )
 
@@ -23,8 +19,6 @@ var (
 	endpoint    string
 	http_proxy  string
 	https_proxy string
-
-	data_dir string
 )
 
 func init() {
@@ -74,30 +68,12 @@ func run() error {
 	// FIXME: should we provide a workaround for aws-sdk-go's AWS_PROFILE vs. standard AWS_DEFAULT_PROFILE?
 	// FIXME: handle http/https_proxy
 
-	config := aws.NewConfig()
-
-	config.Region = aws.String(region)
-
-	if endpoint != "" {
-		if u, err := url.Parse(endpoint); err != nil {
-			return err
-		} else if u.Scheme == "" {
-			return fmt.Errorf("invalid endpoint url: %v", endpoint)
-		} else {
-			config.Endpoint = aws.String(u.String())
-		}
-	}
-
-	svc := cloudformation.New(session.New(), config)
-
-	params := &cloudformation.DescribeStackResourceInput{LogicalResourceId: aws.String(resource), StackName: aws.String(stack)}
-
-	res, err := svc.DescribeStackResource(params)
+	meta, err := metadata.Fetch(region, endpoint, stack, resource)
 	if err != nil {
 		return err
 	}
 
-	json, err := metadata.ParseJson(*res.StackResourceDetail.Metadata)
+	json, err := metadata.ParseJson(meta, key)
 	if err != nil {
 		return err
 	}
