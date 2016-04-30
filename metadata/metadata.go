@@ -73,6 +73,8 @@ func ParseJson(metadata string, key string) (j string, err error) {
 		return "", err
 	}
 
+	// FIXME: only return the struct under key, e.g. config.commands
+
 	b, err := json.MarshalIndent(d, "", "  ")
 	if err != nil {
 		return "", err
