@@ -45,12 +45,12 @@ func init() {
 }
 
 func cfnGetMetadata(cmd *cobra.Command, args []string) error {
-	meta, err := metadata.Fetch(Config)
+	raw, err := metadata.Fetch(Config)
 	if err != nil {
 		return err
 	}
 
-	json, err := metadata.ParseJson(meta, key)
+	json, err := metadata.ParseJson(raw, key)
 	if err != nil {
 		return err
 	}
