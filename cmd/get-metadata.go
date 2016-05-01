@@ -35,7 +35,7 @@ var getMetadataCmd = &cobra.Command{
 	Use:   "get-metadata",
 	Short: "Fetch the metadata associated with a specified stack resource",
 	//Long:  `...`,
-	RunE: getMetadata,
+	RunE: cfnGetMetadata,
 }
 
 func init() {
@@ -44,7 +44,7 @@ func init() {
 	getMetadataCmd.Flags().StringVarP(&key, "key", "k", "", "Retrieve the value at <key> in the Metadata object; must be in dotted object notation (parent.child.leaf)")
 }
 
-func getMetadata(cmd *cobra.Command, args []string) error {
+func cfnGetMetadata(cmd *cobra.Command, args []string) error {
 	meta, err := metadata.Fetch(Config)
 	if err != nil {
 		return err
