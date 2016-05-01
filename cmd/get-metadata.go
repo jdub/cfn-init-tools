@@ -45,6 +45,10 @@ func init() {
 }
 
 func cfnGetMetadata(cmd *cobra.Command, args []string) error {
+	if Config.Local == "" && (Config.Stack == "" || Config.Resource == "") {
+		return fmt.Errorf("You must pass --local, or --stack and --resource")
+	}
+
 	raw, err := metadata.Fetch(Config)
 	if err != nil {
 		return err
