@@ -22,13 +22,18 @@ package cmd
 
 import (
 	"fmt"
-	"runtime"
-
+	"github.com/davecgh/go-spew/spew"
+	"github.com/jdub/cfn-init-tools/metadata"
 	"github.com/spf13/cobra"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 var (
-	configSets string
+	configSets []string
 	resume     bool
 	verbose    bool
 )
@@ -38,20 +43,56 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Configures a host according to stack resource metadata",
 	//Long:  `...`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println("init called")
-	},
+	RunE: cfnInit,
 }
 
 func init() {
 	RootCmd.AddCommand(initCmd)
 
-	initCmd.Flags().StringVarP(&configSets, "configsets", "c", "default", "An optional list of configSets")
+	s := initCmd.Flags().StringP("configsets", "c", "default", "An optional list of configSets")
+	configSets = strings.Split(*s, ",")
 
 	initCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enables verbose logging")
 
 	if runtime.GOOS == "windows" {
 		initCmd.Flags().BoolVar(&resume, "resume", false, "Resume from a previous cfn-init run")
 	}
+}
+
+func cfnInit(cmd *cobra.Command, args []string) error {
+	if Config.Local == "" && (Config.Stack == "" || Config.Resource == "") {
+		return fmt.Errorf("You must pass --local, or --stack and --resource")
+	}
+
+	raw, err := metadata.Fetch(Config)
+	if err != nil {
+		return err
+	}
+
+	meta, err := metadata.Parse(raw)
+	if err != nil {
+		return err
+	}
+
+	// Prepare the data directory for logging and whatnot
+	if err := os.MkdirAll(Config.DataDir, 0644); err != nil {
+		//fmt.Fprintf(os.Stderr, "Error: Could not create data directory: %v\n", Config.DataDir)
+		return err
+	}
+
+	// Write fetched metadata to file
+	json, err := metadata.ParseJson(raw, "")
+	if err != nil {
+		return err
+	}
+
+	name := filepath.Join(Config.DataDir, "metadata.json")
+	if err := ioutil.WriteFile(name, []byte(json), os.FileMode(0644)); err != nil {
+		//fmt.Fprintf(os.Stderr, "Error: Failed to write %v\n", name)
+		return err
+	}
+
+	spew.Dump(meta)
+
+	return nil
 }
