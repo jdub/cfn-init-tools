@@ -54,7 +54,7 @@ func cfnGetMetadata(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	json, err := metadata.ParseJson(raw, key)
+	json, err := metadata.Json(raw, key)
 	if err != nil {
 		return err
 	}

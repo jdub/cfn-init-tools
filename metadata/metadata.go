@@ -94,7 +94,7 @@ func Parse(metadata string) (m Metadata, err error) {
 	return
 }
 
-func ParseJson(metadata string, key string) (j string, err error) {
+func Json(metadata string, key string) (j string, err error) {
 	bytes := []byte(metadata)
 
 	var d map[string]interface{}

@@ -81,7 +81,7 @@ func cfnInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Write fetched metadata to file
-	json, err := metadata.ParseJson(raw, "")
+	json, err := metadata.Json(raw, "")
 	if err != nil {
 		return err
 	}

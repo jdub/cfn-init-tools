@@ -4,12 +4,12 @@ import (
 	"testing"
 )
 
-func TestParseJson(t *testing.T) {
+func TestJson(t *testing.T) {
 	json := `{"pants": "shirt"}`
 	pretty := `{
   "pants": "shirt"
 }`
-	if j, err := ParseJson(json); err != nil {
+	if j, err := Json(json, ""); err != nil {
 		t.Error(err)
 	} else if j != pretty {
 		t.Errorf("%v != %v", j, pretty)
