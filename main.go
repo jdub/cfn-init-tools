@@ -22,15 +22,25 @@ package main
 
 import (
 	"fmt"
-	"os"
-	//"strings"
-
 	"github.com/jdub/cfn-init-tools/cmd"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 func main() {
-	// FIXME: tweak based on os.Args[0] here
-	//fmt.Println("[", strings.Join(os.Args, ", "), "]")
+	// Check for symlinked binaries, run subcommands instead
+	exe := os.Args[0]
+	exe = strings.TrimSuffix(filepath.Base(exe), filepath.Ext(exe))
+	sub := strings.SplitN(exe, "-", 2)
+	if sub[0] == "cfn" {
+		if sub[1] == "init-tools" { // cfn-init-tools{,.exe}
+			sub = sub[:1]
+		}
+
+		os.Args = append(sub, os.Args[1:]...)
+	}
+
 	if err := cmd.RootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
