@@ -23,6 +23,8 @@ package cmd
 import (
 	"github.com/jdub/cfn-init-tools/config"
 	"github.com/spf13/cobra"
+	"os"
+	"runtime"
 )
 
 var (
@@ -49,4 +51,10 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&Config.HttpProxy, "http-proxy", "", "A (non-SSL) HTTP proxy")
 	RootCmd.PersistentFlags().StringVar(&Config.HttpsProxy, "https-proxy", "", "An HTTPS proxy")
+
+	if runtime.GOOS == "windows" {
+		Config.DataDir = os.ExpandEnv(`${SystemDrive}\cfn\cfn-init\data`)
+	} else {
+		Config.DataDir = "/var/lib/cfn-init/data"
+	}
 }

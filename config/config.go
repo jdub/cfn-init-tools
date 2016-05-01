@@ -32,4 +32,6 @@ type Config struct {
 	Role       string
 	AccessKey  string
 	SecretKey  string
+
+	DataDir string
 }
